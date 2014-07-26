@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include "jt_debug.h"
 
 /**
  * -std=c99
@@ -26,15 +27,7 @@
  * hello world
  **/
 
-// http://www.ozzu.com/cpp-tutorials/tutorial-writing-custom-printf-wrapper-function-t89166.html
-void debug(const char* format_string, ...) {
-  fprintf(stderr, "DEBUG: ");
-  va_list args; // name the ... argument
-  va_start(args, format_string); // prepare args for use
-  vfprintf(stderr, format_string, args); // use the version of printf that knows about args
-  va_end(args); // clean-up
-}
-
+ // cc -Wall -std=c99 -o hello_world hello_world.c jt_debug.c
 void print_greeting(char* greeting, char* entity) {
   printf("%s ", greeting);
   puts(entity);
