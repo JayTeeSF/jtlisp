@@ -10,32 +10,53 @@
  *
  * For debugging on Mac use lldb (vs. gdb)
  * OR use valgrind
+ *
+ * ↪ ./hello_world 2>/dev/null
+ * hello world
+ *
+ * ¿jthomas? ~/dev/myownlisp[master*]
+ * ↪ ./hello_world 1>/dev/null
+ * DEBUG: got 0 arg(s)
+ * DEBUG: argv[0]: ./hello_world
+ *
+ * ¿jthomas? ~/dev/myownlisp[master*]
+ * ↪ ./hello_world
+ * DEBUG: got 0 arg(s)
+ * DEBUG: argv[0]: ./hello_world
+ * hello world
  **/
-void print_greeting(char* message) {
-  puts(message);
-}
 
+// http://www.ozzu.com/cpp-tutorials/tutorial-writing-custom-printf-wrapper-function-t89166.html
 void debug(const char* format_string, ...) {
-  printf("DEBUG: ");
+  fprintf(stderr, "DEBUG: ");
   va_list args; // name the ... argument
   va_start(args, format_string); // prepare args for use
-  vprintf(format_string, args); // use the version of printf that knows about args
+  vfprintf(stderr, format_string, args); // use the version of printf that knows about args
   va_end(args); // clean-up
 }
 
-int main(int argc, char** argv) {
-  char* message;
-  char default_message[] = "hello world";
+void print_greeting(char* greeting, char* entity) {
+  printf("%s ", greeting);
+  puts(entity);
+}
 
-  // printf("DEBUG: got %d arg(s)\n", argc -1);
-  debug("got %d arg(s)\n", argc -1);
-  if (argc > 1 ) { // arg 1 is the program
-    debug("argv[1]: %s\n", argv[1]);
-    message = argv[1];
-  } else {
-    debug("argv[0]: %s\n", argv[0]);
-    message = &default_message[0];
+int main(int argc, char** argv) {
+  char *greeting, *entity;
+  char default_greeting[] = "hello";
+  char default_entity[] = "world";
+
+  greeting = &default_greeting[0];
+  entity = &default_entity[0];
+
+  debug("argv[0]: %s got %d arg(s)\n", argv[0], argc -1);
+  if (argc >= 2 ) { // arg 1 is the program
+    debug("entity/argv[1]: %s\n", argv[1]);
+    entity = argv[1];
+    if (argc > 2) {
+      debug("greeting/argv[2]: %s\n", argv[2]);
+      greeting = argv[2];
+    }
   }
-  print_greeting(message);
+  print_greeting(greeting, entity);
   return 0;
 }
