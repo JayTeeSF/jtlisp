@@ -15,3 +15,12 @@ void debug(const char* format_string, ...) {
   vfprintf(stderr, format_string, args); // use the version of printf that knows about args
   va_end(args); // clean-up
 }
+
+int number_of_arguments_in(int raw_argument_count) {
+  int adjusted_argument_count = raw_argument_count - 1;
+  return adjusted_argument_count >= 0 ? adjusted_argument_count : 0;
+}
+
+int number_of_valid_inputs(int number_of_arguments, int number_of_arguments_for_a_valid_input) {
+  return ((number_of_arguments - number_of_arguments_for_a_valid_input) >= 0) ? (number_of_arguments / number_of_arguments_for_a_valid_input) : 0;
+}
