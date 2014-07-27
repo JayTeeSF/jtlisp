@@ -14,6 +14,7 @@ void debug(const char* format_string, ...) {
   va_start(args, format_string); // prepare args for use
   vfprintf(stderr, format_string, args); // use the version of printf that knows about args
   va_end(args); // clean-up
+  fflush(stdout);
 }
 
 int number_of_arguments_in(int raw_argument_count) {

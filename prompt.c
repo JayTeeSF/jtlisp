@@ -1,4 +1,6 @@
 #include "prompt.h"
+#include "mpc.h"
+#include "parser.h"
 #include "jt_debug.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,20 +40,6 @@ int found_an_exit_in(char *input_token) {
   }
 }
 
-// FIXME: allow for an many tokens
-void respond_to(char *parsed_input) {
-  if (found_an_exit_in(parsed_input)) {
-    debug("found the exit\n");
-    exit(0);
-  } else {
-    echo_message(parsed_input);
-  }
-}
-
-char *parse(char *input) {
-  return input;
-}
-
 char *generate_prompt(void) {
   int prompt_size = strlen(version) + strlen(minimal_prompt);
   char *prompt_string;
@@ -62,7 +50,7 @@ char *generate_prompt(void) {
   return prompt_string;
 }
 
-void prompt(void) {
+int prompt(void) {
   char *prompt_string = generate_prompt();
   char *input = readline(prompt_string);
   add_history(input);
@@ -70,4 +58,5 @@ void prompt(void) {
   respond_to(parse(input));
   free(prompt_string);
   free(input);
+  return !found_an_exit_in(input);
 }
