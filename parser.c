@@ -2,7 +2,7 @@
 #include "parser.h"
 #include "jt_debug.h"
 
-const int number_of_parsers = 11; //4 for RPN
+const int number_of_parsers = 13; //4 for RPN
 mpc_result_t result;
 mpc_parser_t* parsers[number_of_parsers]; // sadly, must be global to not become a dangler...
 char* rpn_grammar = "                                                    \
@@ -12,19 +12,24 @@ char* rpn_grammar = "                                                    \
                      lispy    : /^/ <operator> <expr>+ /$/  ;            \
                      ";
 
-char* simple_speak_grammar = "                                                                              \
-                              common_noun : \"dog\" | \"monkey\" | \"wind\" | \"house\" | \"president\" ;   \
-                              proper_noun : \"joe\" | \"the white house\" ;                                 \
-                              article     : \"the\" | \"a\" | \"an\" ;                                      \
-                              preposition : \"on\" | \"around\" | \"in\" | \"to\" ;                         \
-                              third_person_singular_verb : \"runs\" | \"sits\" | \"sways\" | \"gurgles\" ;  \
-                              verb        : <third_person_singular_verb> ;                                  \
-                              context     : <preposition> <object> ;                          \
-                              subject     : <article> <common_noun> | <proper_noun>  ;                \
-                              object      : <article> <common_noun> | <proper_noun>  ;                \
-                              predicate   : <verb> <context>* ;                                              \
-                              lispy       : /^/ <subject> <predicate> /$/  ;                                \
+char* simple_speak_grammar = "                                                                                 \
+                              article     : \"the\" | \"a\" | \"an\" ;                                         \
+                              common_noun : \"dog\" | \"monkey\" | \"wind\" | \"house\" | \"president\" | <article> <common_noun> ;      \
+                              proper_noun : \"joe\" | \"the white house\" | \"me\" ;                           \
+                              noun : <common_noun> | <proper_noun> ;                                           \
+                              conjunction : \"and\" | \"but\" | \"nor\" ;                                      \
+                              preposition : \"on\" | \"around\" | \"in\" | \"to\" | \"for\" ;                  \
+                              third_person_singular_verb : \"runs\" | \"sits\" | \"sways\" | \"breaks\" | \"gurgles\" ;  \
+                              verb        : <third_person_singular_verb> ;                                     \
+                              subject     : <noun>  ;                         \
+                              object      : <noun>  ;         \
+                              context     : <preposition>? <object> ;                           \
+                              predicate   :  (<context>+ <conjunction>? <context>?)? | <predicate> <verb> ; \
+                              lispy       : /^/ <subject> <verb> <predicate> /$/  ;                                   \
                               ";
+                              // <context> | <conjuction>+ <verb> <predicate>+ ; 
+                              // | <verb> <object> | <conjunction>? <predicate>+ ;                      
+                              // | <verb> <context> <conjunction> <object> <predicate> | <verb> <conjunction> <object> <predicate> ;
 
 void generate_parsers(void) {
   debug("parsers-size: %d ?= 0\n", sizeof(parsers));
@@ -33,17 +38,19 @@ void generate_parsers(void) {
   //parsers[2] = mpc_new("expr");
   //parsers[3] = mpc_new("lispy"); // last one must be the main one
   //
-  parsers[0] = mpc_new("common_noun");
-  parsers[1] = mpc_new("proper_noun");
-  parsers[2] = mpc_new("article");
-  parsers[3] = mpc_new("preposition");
-  parsers[4] = mpc_new("third_person_singular_verb");
-  parsers[5] = mpc_new("verb");
-  parsers[6] = mpc_new("context");
-  parsers[7] = mpc_new("subject");
-  parsers[8] = mpc_new("object");
-  parsers[9] = mpc_new("predicate");
-  parsers[10] = mpc_new("lispy");
+  parsers[0] = mpc_new("article");
+  parsers[1] = mpc_new("common_noun");
+  parsers[2] = mpc_new("proper_noun");
+  parsers[3] = mpc_new("noun");
+  parsers[4] = mpc_new("conjunction");
+  parsers[5] = mpc_new("preposition");
+  parsers[6] = mpc_new("third_person_singular_verb");
+  parsers[7] = mpc_new("verb");
+  parsers[8] = mpc_new("subject");
+  parsers[9] = mpc_new("object");
+  parsers[10] = mpc_new("context");
+  parsers[11] = mpc_new("predicate");
+  parsers[12] = mpc_new("lispy");
   debug("parsers-size: %d ?> 0\n", sizeof(parsers));
   mpca_lang(
       MPCA_LANG_DEFAULT, grammar(SIMPLE_SPEAK),
@@ -57,7 +64,9 @@ void generate_parsers(void) {
       parsers[7],
       parsers[8],
       parsers[9],
-      parsers[10]
+      parsers[10],
+      parsers[11],
+      parsers[12]
   );
 }
 
@@ -76,7 +85,9 @@ void cleanup_parsers(void) {
       parsers[7],
       parsers[8],
       parsers[9],
-      parsers[10]
+      parsers[10],
+      parsers[11],
+      parsers[12]
   );
 }
 
