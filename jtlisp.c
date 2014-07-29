@@ -3,7 +3,7 @@
 #include "prompt.h"
 #include "jt_debug.h"
 
-// cc -Wall -std=c99 -o jtlisp -ledit jtlisp.c mpc.c prompt.c parser.c jt_debug.c
+// cc -Wall -std=c99 -o jtlisp -ledit mpc.c jt_debug.c parser.c prompt.c jtlisp.c
 int main(int ac, char** av) {
   generate_parsers();
   welcome_message();
