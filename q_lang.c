@@ -1,11 +1,13 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+//#include <stddef.h>
 #include <editline/readline.h>
 #include "jt_debug.h"
 
 // cc -Wall -std=c99 -ledit jt_debug.c q_lang.c -o q_lang
 
+int time_to_quit = 0;
 char version[] = "0.01a";
 char token_separator[] = " ";
 char minimal_prompt[] = " > ";
@@ -44,9 +46,10 @@ int found_an_exit_in(char *input_token) {
   }
 }
 
-int continuing(char* input) {
-  if (input == NULL) { return 1; }
-  return found_an_exit_in(input);
+int continuing(void) { //char* input) {
+  return ! time_to_quit;
+  //if (NULL == input) { return 1; }
+  //return found_an_exit_in(input);
 }
 
 char* tokenize(char* input) {
@@ -54,8 +57,13 @@ char* tokenize(char* input) {
 }
 
 void free_all(int i, char** tokens) {
-  for (;i>0; i--){
-    free(tokens[i]);
+  for (i--; i>=0; i--){
+    if (tokens[i]) {
+      debug("freeing tokens[%d] => %s\n",i, tokens[i]);
+      free(tokens[i]);
+    } else {
+      debug("already free'd tokens[%d] => %s\n",i, tokens[i]);
+    }
   }
 }
 
@@ -70,54 +78,78 @@ char** rest(char** list) {
 }
 
 char* head(char** list) {
-  if (list == NULL) { return NULL; }
+  if (NULL == list) { debug("null list\n"); return NULL; }
   return list[0];
 }
 
 long add(char** operands) {
   char *operand;
+  //char **operands_pointer = operands;
   long sum = 0;
-  while((operand = head(operands)) != NULL) {
-    sum += atof(operand);
+  debug("adding to sum: %ld\n", sum);
+  while((operand = head(operands)) != NULL) { // need a 'pop' operation
+    operands = rest(operands);
+    int operand_value = atoi(operand); // atof
+    debug("operand_value: %d\n", operand_value);
+    sum += operand_value;
   }
+  debug("final sum: %ld\n", sum);
   return sum;
 }
 
 void eval(char** tokens) {
   char *operation = head(tokens);
-  if (strstr(operation, "add"))  { printf("=> %ld\n", add(rest(tokens))); }
+  if (found_an_exit_in(operation)) { time_to_quit = 1; return; }
+  if (strstr(operation, "add"))  { debug("gonna add\n"); printf("=> %ld\n", add(rest(tokens))); }
 }
 
 int main(int ac, char** av) {
   char *input = NULL;
+  char *running;
   char **tokens = NULL;
-  int i = 0;
+  int i, loop_count = 0;
   debug("generating the prompt\n");
   char *prompt_string = generate_prompt();
 
   debug("intro-ing\n");
   intro();
   debug("starting loop\n");
-  while(continuing(head(tokens))) {
+  while(continuing()) { //head(tokens))) 
+    loop_count++;
+    if (loop_count > 1) {
+      debug("free tokens\n");
+      free(tokens); tokens = NULL;
+    }
+
+    i = 0;
     debug("reading line --using prompt: %s\n", prompt_string);
     input = readline(prompt_string);
     debug("adding input(%s) to history\n", input);
     add_history(input);
 
     tokens = malloc(sizeof(input) * sizeof(char*));
-    while ((tokens[i] = tokenize(input)) != NULL) {
-      debug("token[%d]: %s\n", i, tokens[i]);
+    //return strsep(&input, token_separator);
+    //while ((tokens[i] = tokenize(input)) != NULL) 
+    running = strdup(input);
+    while ((tokens[i] = strsep(&running, token_separator)) != NULL) {
+      debug("tokens[%d]: %s\n", i, tokens[i]);
       i++;
     }
     debug("evaluating the tokens\n");
     eval(tokens);
 
-    debug("freeing all %d tokens\n", i);
-    free_all(i, tokens);
-    free(tokens);
+    //debug("freeing all %d tokens\n", i);
+    //free_all(i, tokens);
+
     debug("freeing input\n");
     free(input);
+    debug("freeing running\n");
+    free(running);
+    debug("looping\n");
   }
+  //redundant...
+  debug("free tokens\n");
+  free(tokens); tokens = NULL;
 
   debug("freeing prompt_string\n");
   free(prompt_string);
